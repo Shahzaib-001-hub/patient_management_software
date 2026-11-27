@@ -25,6 +25,7 @@ const StoreOrderSchema = new mongoose.Schema(
           required: true,
         },
         name: { type: String, required: true },
+        variantLabel: { type: String, default: "" },
         quantity: { type: Number, required: true, min: 1 },
         unitPrice: { type: Number, required: true, min: 0 },
         total: { type: Number, required: true, min: 0 },

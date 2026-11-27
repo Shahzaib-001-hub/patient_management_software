@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#F5F8FC"/>
+  <ellipse cx="200" cy="258" rx="68" ry="12" fill="#CBD5E1" opacity="0.5"/>
+  <rect x="184" y="42" width="32" height="34" rx="10" fill="#BA2820"/>
+  <rect x="176" y="72" width="48" height="22" rx="4" fill="#991F18"/>
+  <path d="M180 94 H220 L242 124 V240 C242 250 234 256 224 256 H176 C166 256 158 250 158 240 V124 L180 94 Z" fill="#1E293B"/>
+  <path d="M186 98 H200 L176 128 V244 H166 V126 L186 98 Z" fill="#475569" opacity="0.5"/>
+  <rect x="164" y="138" width="72" height="92" rx="4" fill="#FFFFFF"/>
+  <rect x="164" y="138" width="72" height="18" rx="2" fill="#BA2820"/>
+  <text x="200" y="150" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-size="8" font-weight="700">PRWC CLINIC</text>
+  <text x="200" y="176" text-anchor="middle" fill="#0F172A" font-family="sans-serif" font-size="8.5" font-weight="700">GINGER &amp;</text>
+  <text x="200" y="188" text-anchor="middle" fill="#0F172A" font-family="sans-serif" font-size="8.5" font-weight="700">SPINE OIL</text>
+  <rect x="178" y="198" width="44" height="14" rx="7" fill="#FEF2F2"/>
+  <text x="200" y="208" text-anchor="middle" fill="#BA2820" font-family="monospace" font-size="8" font-weight="700">20 / 30 ml</text>
+</svg>

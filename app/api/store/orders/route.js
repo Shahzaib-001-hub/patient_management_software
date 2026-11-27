@@ -65,24 +65,55 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
     const qty = Math.max(1, Number(item.quantity || 1));
-    if (product.stockQuantity < qty) {
-      return NextResponse.json(
-        { error: `Insufficient stock for ${product.name}` },
-        { status: 409 }
+    let unitPrice = product.price;
+    let variantLabel = item.variantLabel || product.volumeOrSize || "";
+
+    if (product.variants?.length > 0 && item.variantLabel) {
+      const variant = product.variants.find(
+        (v) => v.label === item.variantLabel
       );
+      if (!variant) {
+        return NextResponse.json(
+          { error: `Invalid size selected for ${product.name}` },
+          { status: 400 }
+        );
+      }
+      if (variant.stockQuantity < qty) {
+        return NextResponse.json(
+          { error: `Insufficient stock for ${product.name} (${variant.label})` },
+          { status: 409 }
+        );
+      }
+      unitPrice = variant.price;
+      variant.stockQuantity -= qty;
+      product.stockQuantity = product.variants.reduce(
+        (sum, v) => sum + v.stockQuantity,
+        0
+      );
+    } else {
+      if (product.stockQuantity < qty) {
+        return NextResponse.json(
+          { error: `Insufficient stock for ${product.name}` },
+          { status: 409 }
+        );
+      }
+      product.stockQuantity -= qty;
     }
-    const lineTotal = product.price * qty;
+
+    await product.save();
+    const lineTotal = unitPrice * qty;
     subtotal += lineTotal;
+
     verifiedItems.push({
       productId: product._id,
       name: product.name,
+      variantLabel,
       quantity: qty,
-      unitPrice: product.price,
+      unitPrice,
       total: lineTotal,
     });
-    product.stockQuantity -= qty;
-    await product.save();
   }
 
   const shippingFee = paymentMethod === "clinic_pickup" ? 0 : 250;
