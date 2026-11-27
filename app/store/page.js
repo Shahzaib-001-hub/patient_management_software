@@ -329,17 +329,14 @@ export default function StorefrontPage() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <div className="w-9 h-9 rounded-lg bg-[#283983] flex items-center justify-center">
-              <HeartPulse className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-slate-900 text-sm sm:text-base block">
-                PRWC Wellness &amp; Therapy Store
-              </span>
-              <span className="text-[11px] text-slate-500 block">
-                Therapeutic Oils (20 ml / 30 ml) &amp; Rehab Products
-              </span>
-            </div>
+            <img
+              src="/images/brand-logo.png"
+              alt="Pain Relief & Wellness Center"
+              className="h-9 w-40 object-cover object-center"
+            />
+            <span className="hidden md:inline-block text-xs font-semibold text-slate-500 border-l border-slate-200 pl-3">
+              Wellness &amp; Therapy Store
+            </span>
           </div>
 
           <div className="flex items-center gap-3">

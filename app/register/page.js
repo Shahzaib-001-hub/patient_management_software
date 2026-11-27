@@ -50,10 +50,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#F5F8FC] py-10 px-4 flex items-center justify-center">
       <div className="w-full max-w-xl bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
-        <div className="flex items-center gap-2.5 mb-6">
-          <div className="w-9 h-9 rounded-lg bg-[#283983] flex items-center justify-center">
-            <HeartPulse className="w-5 h-5 text-white" />
-          </div>
+        <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
           <div>
             <h1 className="text-xl font-bold text-slate-900">
               Online Patient Registration
@@ -62,6 +59,13 @@ export default function RegisterPage() {
               Create your PRWC Patient Portal account for telehealth &amp; rehab care
             </p>
           </div>
+          <Link href="/">
+            <img
+              src="/images/brand-logo.png"
+              alt="Pain Relief & Wellness Center"
+              className="h-9 w-36 object-cover object-center hidden sm:block"
+            />
+          </Link>
         </div>
 
         {error && (

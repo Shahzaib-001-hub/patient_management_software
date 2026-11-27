@@ -168,19 +168,16 @@ export function AppShell({ children }) {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="h-16 px-5 flex items-center justify-between border-b border-white/10">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#BA2820] flex items-center justify-center shadow-xs">
-              <HeartPulse className="w-5 h-5 text-white" />
-            </div>
-            <div className="leading-tight">
-              <span className="font-bold text-sm tracking-tight block">
-                PRWC Clinic
-              </span>
-              <span className="text-[11px] text-indigo-200 block">
-                Pain &amp; Rehab System
-              </span>
-            </div>
+        <div className="h-16 px-4 flex items-center justify-between border-b border-white/10">
+          <Link
+            href="/"
+            className="bg-white rounded-lg px-2.5 py-1 flex items-center justify-center shadow-xs"
+          >
+            <img
+              src="/images/brand-logo.png"
+              alt="Pain Relief & Wellness Center"
+              className="h-8 w-36 object-cover object-center"
+            />
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

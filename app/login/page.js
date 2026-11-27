@@ -50,18 +50,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#F5F8FC] flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-[#283983] flex items-center justify-center shadow-xs">
-              <HeartPulse className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-left">
-              <span className="font-bold text-slate-900 text-base block">
-                Pain Relief &amp; Wellness Center
-              </span>
-              <span className="text-xs text-slate-500 block">
-                Secure Clinic &amp; Patient Portal
-              </span>
-            </div>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center bg-white px-5 py-2.5 rounded-2xl border border-slate-200 shadow-2xs"
+          >
+            <img
+              src="/images/brand-logo.png"
+              alt="Pain Relief & Wellness Center"
+              className="h-11 w-48 object-cover object-center"
+            />
           </Link>
         </div>
 
