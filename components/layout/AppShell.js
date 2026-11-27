@@ -24,6 +24,7 @@ import {
   X,
   HeartPulse,
   TrendingUp,
+  ShoppingBag,
 } from "lucide-react";
 
 const ROLE_LABELS = {
@@ -46,6 +47,7 @@ function getNavItems(role) {
       { label: "My Exercises", href: "/patient/exercises", icon: Dumbbell },
       { label: "My Progress", href: "/patient/progress", icon: TrendingUp },
       { label: "My Payments", href: "/patient/payments", icon: CreditCard },
+      { label: "Wellness Store", href: "/store", icon: ShoppingBag },
       { label: "Profile & Settings", href: "/patient/profile", icon: Settings },
     ];
   }
@@ -89,6 +91,9 @@ function getNavItems(role) {
   }
   if (["super_admin", "clinic_admin", "accountant", "receptionist"].includes(role)) {
     items.push({ label: "Billing & Payments", href: "/admin/billing", icon: CreditCard });
+  }
+  if (["super_admin", "clinic_admin", "receptionist", "rehab_staff", "accountant"].includes(role)) {
+    items.push({ label: "Store & Oils", href: "/admin/store", icon: ShoppingBag });
   }
   if (["super_admin", "clinic_admin", "accountant"].includes(role)) {
     items.push({ label: "Reports", href: "/admin/reports", icon: BarChart3 });

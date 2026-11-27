@@ -30,6 +30,12 @@ export default function HomePage() {
 
           <div className="flex items-center gap-3">
             <Link
+              href="/store"
+              className="px-4 py-2 text-sm font-semibold text-[#BA2820] hover:bg-[#FEF2F2] rounded-lg transition-colors"
+            >
+              Wellness Store &amp; Oils
+            </Link>
+            <Link
               href="/register"
               className="px-4 py-2 text-sm font-semibold text-[#283983] hover:bg-[#EEF2FF] rounded-lg transition-colors"
             >
