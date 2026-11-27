@@ -4,23 +4,30 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Badge, statusBadgeVariant } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 
 export default function AdminStorePage() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("products");
   const [modalOpen, setModalOpen] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     name: "",
     sku: "",
     category: "therapeutic_oil",
-    volumeOrSize: "100 ml",
+    volumeOrSize: "20 ml / 30 ml",
     price: "",
     stockQuantity: 20,
+    price20ml: "1200",
+    stock20ml: "25",
+    price30ml: "1650",
+    stock30ml: "20",
+    imageUrl: "",
     description: "",
     usageInstructions: "",
   });
@@ -38,27 +45,88 @@ export default function AdminStorePage() {
     load();
   }, [load]);
 
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImg(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/store/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    setUploadingImg(false);
+    if (res.ok && data.imageUrl) {
+      setForm((prev) => ({ ...prev, imageUrl: data.imageUrl }));
+    }
+  }
+
   async function handleCreateProduct(e) {
     e.preventDefault();
+    setError("");
+    const isOil = form.category === "therapeutic_oil";
+    const variants = isOil
+      ? [
+          {
+            label: "20 ml",
+            price: Number(form.price20ml || 0),
+            stockQuantity: Number(form.stock20ml || 0),
+          },
+          {
+            label: "30 ml",
+            price: Number(form.price30ml || 0),
+            stockQuantity: Number(form.stock30ml || 0),
+          },
+        ]
+      : [];
+
+    const payload = {
+      name: form.name,
+      sku: form.sku,
+      category: form.category,
+      volumeOrSize: isOil ? "20 ml / 30 ml" : form.volumeOrSize,
+      price: isOil ? Number(form.price20ml || 0) : Number(form.price || 0),
+      stockQuantity: isOil
+        ? Number(form.stock20ml || 0) + Number(form.stock30ml || 0)
+        : Number(form.stockQuantity || 0),
+      variants,
+      imageUrl: form.imageUrl,
+      description: form.description,
+      usageInstructions: form.usageInstructions,
+    };
+
     const res = await fetch("/api/store/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
-    if (res.ok) {
-      setModalOpen(false);
-      setForm({
-        name: "",
-        sku: "",
-        category: "therapeutic_oil",
-        volumeOrSize: "100 ml",
-        price: "",
-        stockQuantity: 20,
-        description: "",
-        usageInstructions: "",
-      });
-      load();
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Could not create product");
+      return;
     }
+
+    setModalOpen(false);
+    setForm({
+      name: "",
+      sku: "",
+      category: "therapeutic_oil",
+      volumeOrSize: "20 ml / 30 ml",
+      price: "",
+      stockQuantity: 20,
+      price20ml: "1200",
+      stock20ml: "25",
+      price30ml: "1650",
+      stock30ml: "20",
+      imageUrl: "",
+      description: "",
+      usageInstructions: "",
+    });
+    load();
+  }
+
+  async function handleDeleteProduct(product) {
+    if (!window.confirm(`Delete "${product.name}" from the storefront?`)) return;
+    await fetch(`/api/store/products/${product._id}`, { method: "DELETE" });
+    load();
   }
 
   async function updateStock(id, nextStock) {
@@ -83,7 +151,7 @@ export default function AdminStorePage() {
     <AppShell>
       <PageHeader
         title="Clinic Storefront & Inventory"
-        subtitle="Manage therapeutic oils, pain relief products, stock levels, and patient orders"
+        subtitle="Admin and Doctors can add products, upload product images, delete items, and manage orders"
         actions={
           <>
             <Link
@@ -134,17 +202,31 @@ export default function AdminStorePage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase">
                 <tr>
+                  <th className="py-3 px-4">Image</th>
                   <th className="py-3 px-4">SKU</th>
                   <th className="py-3 px-4">Product / Oil</th>
                   <th className="py-3 px-4">Category</th>
                   <th className="py-3 px-4">Price</th>
                   <th className="py-3 px-4">Stock</th>
-                  <th className="py-3 px-4 text-right">Quick Restock</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => (
                   <tr key={p._id} className="hover:bg-slate-50">
+                    <td className="py-2.5 px-4">
+                      {p.imageUrl ? (
+                        <img
+                          src={p.imageUrl}
+                          alt={p.name}
+                          className="w-12 h-10 object-cover rounded-lg border border-slate-200 bg-[#F5F8FC]"
+                        />
+                      ) : (
+                        <div className="w-12 h-10 rounded-lg border border-slate-200 bg-[#F5F8FC] flex items-center justify-center text-slate-400">
+                          <ImageIcon className="w-4 h-4" />
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3 px-4 font-mono text-[#283983] font-semibold">
                       {p.sku}
                     </td>
@@ -160,18 +242,31 @@ export default function AdminStorePage() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4 font-mono">
-                      {p.currency} {p.price.toLocaleString()}
+                      {p.variants?.length > 0
+                        ? p.variants
+                            .map((v) => `${v.label}: ${v.price}`)
+                            .join(" | ")
+                        : `${p.currency} ${p.price.toLocaleString()}`}
                     </td>
                     <td className="py-3 px-4 font-mono font-bold">
                       {p.stockQuantity}
                     </td>
-                    <td className="py-3 px-4 text-right space-x-1.5">
-                      <button
-                        onClick={() => updateStock(p._id, p.stockQuantity + 10)}
-                        className="px-2.5 py-1 rounded bg-[#EEF2FF] text-[#283983] font-semibold"
-                      >
-                        +10 Stock
-                      </button>
+                    <td className="py-3 px-4 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => updateStock(p._id, p.stockQuantity + 10)}
+                          className="px-2.5 py-1 rounded bg-[#EEF2FF] text-[#283983] font-semibold"
+                        >
+                          +10 Stock
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(p)}
+                          className="p-1.5 rounded bg-[#FEF2F2] text-[#BA2820] hover:bg-[#BA2820] hover:text-white transition-colors"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -217,7 +312,8 @@ export default function AdminStorePage() {
                       <td className="py-3 px-4">
                         {o.items.map((i, idx) => (
                           <span key={idx} className="block">
-                            {i.quantity}x {i.name}
+                            {i.quantity}x {i.name}{" "}
+                            {i.variantLabel ? `(${i.variantLabel})` : ""}
                           </span>
                         ))}
                       </td>
@@ -266,6 +362,11 @@ export default function AdminStorePage() {
         onClose={() => setModalOpen(false)}
         title="Add Store Product / Therapeutic Oil"
       >
+        {error && (
+          <div className="mb-3 p-3 rounded-lg bg-[#FEF2F2] text-xs text-[#BA2820]">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleCreateProduct} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
@@ -289,40 +390,129 @@ export default function AdminStorePage() {
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white"
             >
-              <option value="therapeutic_oil">Therapeutic Oil</option>
+              <option value="therapeutic_oil">Therapeutic Oil (20ml / 30ml)</option>
               <option value="pain_relief_gel">Pain Relief Gel</option>
               <option value="braces_supports">Braces &amp; Supports</option>
               <option value="rehab_equipment">Rehab Equipment</option>
               <option value="supplements">Supplements</option>
             </select>
-            <input
-              type="text"
-              placeholder="Volume / Size (e.g., 100 ml)"
-              value={form.volumeOrSize}
-              onChange={(e) =>
-                setForm({ ...form, volumeOrSize: e.target.value })
-              }
-              className="px-3 py-2 text-sm rounded-lg border border-slate-200"
-            />
-            <input
-              type="number"
-              required
-              placeholder="Price (PKR) *"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-200"
-            />
-            <input
-              type="number"
-              required
-              placeholder="Initial Stock *"
-              value={form.stockQuantity}
-              onChange={(e) =>
-                setForm({ ...form, stockQuantity: Number(e.target.value) })
-              }
-              className="px-3 py-2 text-sm rounded-lg border border-slate-200"
-            />
+            {form.category !== "therapeutic_oil" && (
+              <input
+                type="text"
+                placeholder="Volume / Size (e.g., 75 g)"
+                value={form.volumeOrSize}
+                onChange={(e) =>
+                  setForm({ ...form, volumeOrSize: e.target.value })
+                }
+                className="px-3 py-2 text-sm rounded-lg border border-slate-200"
+              />
+            )}
           </div>
+
+          {form.category === "therapeutic_oil" ? (
+            <div className="p-3 rounded-xl bg-[#F5F8FC] border border-slate-200 space-y-2">
+              <p className="text-xs font-semibold text-slate-700">
+                Bottle Sizes (20 ml &amp; 30 ml)
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <input
+                  type="number"
+                  required
+                  placeholder="20 ml Price *"
+                  value={form.price20ml}
+                  onChange={(e) =>
+                    setForm({ ...form, price20ml: e.target.value })
+                  }
+                  className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white"
+                />
+                <input
+                  type="number"
+                  required
+                  placeholder="20 ml Stock *"
+                  value={form.stock20ml}
+                  onChange={(e) =>
+                    setForm({ ...form, stock20ml: e.target.value })
+                  }
+                  className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white"
+                />
+                <input
+                  type="number"
+                  required
+                  placeholder="30 ml Price *"
+                  value={form.price30ml}
+                  onChange={(e) =>
+                    setForm({ ...form, price30ml: e.target.value })
+                  }
+                  className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white"
+                />
+                <input
+                  type="number"
+                  required
+                  placeholder="30 ml Stock *"
+                  value={form.stock30ml}
+                  onChange={(e) =>
+                    setForm({ ...form, stock30ml: e.target.value })
+                  }
+                  className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                required
+                placeholder="Price (PKR) *"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                className="px-3 py-2 text-sm rounded-lg border border-slate-200"
+              />
+              <input
+                type="number"
+                required
+                placeholder="Initial Stock *"
+                value={form.stockQuantity}
+                onChange={(e) =>
+                  setForm({ ...form, stockQuantity: Number(e.target.value) })
+                }
+                className="px-3 py-2 text-sm rounded-lg border border-slate-200"
+              />
+            </div>
+          )}
+
+          {/* Product Image Upload or URL */}
+          <div className="p-3 rounded-xl bg-[#F5F8FC] border border-slate-200 space-y-2">
+            <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-[#283983]" />
+              Product Image (Upload or Paste URL)
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="text-xs flex-1"
+              />
+              <input
+                type="text"
+                placeholder="Or paste image URL (/images/store/...)"
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white flex-1"
+              />
+            </div>
+            {uploadingImg && (
+              <p className="text-[11px] text-[#283983]">Uploading image...</p>
+            )}
+            {form.imageUrl && (
+              <img
+                src={form.imageUrl}
+                alt="Preview"
+                className="h-20 w-24 object-cover rounded-lg border border-slate-200 bg-white"
+              />
+            )}
+          </div>
+
           <textarea
             rows={2}
             placeholder="Product Description"

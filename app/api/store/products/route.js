@@ -22,6 +22,7 @@ export async function POST(req) {
   const { error, user } = await requireAuth([
     ROLES.SUPER_ADMIN,
     ROLES.CLINIC_ADMIN,
+    ROLES.DOCTOR,
     ROLES.REHAB_STAFF,
   ]);
   if (error) return error;
@@ -35,10 +36,17 @@ export async function POST(req) {
     );
   }
 
+  const variants = Array.isArray(body.variants) ? body.variants : [];
+  const totalVariantStock =
+    variants.length > 0
+      ? variants.reduce((s, v) => s + Number(v.stockQuantity || 0), 0)
+      : Number(body.stockQuantity || 0);
+
   const product = await Product.create({
     ...body,
     price: Number(body.price),
-    stockQuantity: Number(body.stockQuantity || 0),
+    stockQuantity: totalVariantStock,
+    variants,
     createdBy: user.userId,
   });
 

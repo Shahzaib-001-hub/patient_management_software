@@ -17,12 +17,179 @@ import { Badge } from "@/components/ui/Badge";
 
 const CATEGORIES = [
   { id: "all", label: "All Products" },
-  { id: "therapeutic_oil", label: "Therapeutic Oils" },
+  { id: "therapeutic_oil", label: "Therapeutic Oils (20ml / 30ml)" },
   { id: "pain_relief_gel", label: "Pain Relief Gels" },
   { id: "braces_supports", label: "Braces & Supports" },
   { id: "rehab_equipment", label: "Rehab Equipment" },
   { id: "supplements", label: "Supplements" },
 ];
+
+function ProductCard({ product, onAddToCart }) {
+  const hasVariants = product.variants && product.variants.length > 0;
+  const [selectedVariant, setSelectedVariant] = useState(
+    hasVariants ? product.variants[0].label : product.volumeOrSize || ""
+  );
+  const [qty, setQty] = useState(1);
+
+  const activeVariant = hasVariants
+    ? product.variants.find((v) => v.label === selectedVariant) ||
+      product.variants[0]
+    : null;
+
+  const displayPrice = activeVariant ? activeVariant.price : product.price;
+  const displayStock = activeVariant
+    ? activeVariant.stockQuantity
+    : product.stockQuantity;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
+      <div>
+        {/* Product Image */}
+        <div className="relative aspect-[4/3] bg-[#F5F8FC] border-b border-slate-100 overflow-hidden">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-400">
+              <Droplets className="w-12 h-12" />
+            </div>
+          )}
+          <div className="absolute top-3 left-3">
+            <Badge
+              variant={
+                product.category === "therapeutic_oil" ? "accent" : "primary"
+              }
+            >
+              {product.category.replace(/_/g, " ")}
+            </Badge>
+          </div>
+          {product.volumeOrSize && !hasVariants && (
+            <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-white/90 border border-slate-200 font-mono text-[11px] font-semibold text-slate-700">
+              {product.volumeOrSize}
+            </span>
+          )}
+        </div>
+
+        {/* Name & Description */}
+        <div className="p-5 space-y-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 leading-snug">
+              {product.name}
+            </h2>
+            <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+              {product.description}
+            </p>
+          </div>
+
+          {product.usageInstructions && (
+            <p className="text-[11px] text-slate-500 bg-[#F5F8FC] p-2.5 rounded-lg border border-slate-100">
+              <strong>Usage:</strong> {product.usageInstructions}
+            </p>
+          )}
+
+          {/* 20 ml / 30 ml Size Selector for Oils */}
+          {hasVariants && (
+            <div>
+              <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                Select Bottle Size
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {product.variants.map((v) => {
+                  const active = v.label === selectedVariant;
+                  return (
+                    <button
+                      key={v.label}
+                      type="button"
+                      onClick={() => {
+                        setSelectedVariant(v.label);
+                        setQty(1);
+                      }}
+                      className={`px-3 py-2 rounded-xl border text-left transition-all ${
+                        active
+                          ? "border-[#283983] bg-[#EEF2FF] text-[#283983] shadow-2xs"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="block font-mono text-xs font-bold">
+                        {v.label}
+                      </span>
+                      <span className="block font-mono text-[11px] opacity-85">
+                        {product.currency} {v.price.toLocaleString()}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Price, Quantity & Add to Cart */}
+      <div className="px-5 pb-5 pt-3 border-t border-slate-100 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="font-mono font-bold text-lg text-[#283983]">
+              {product.currency} {displayPrice.toLocaleString()}
+            </span>
+            <span className="block text-[11px] text-slate-500">
+              {displayStock > 0 ? `${displayStock} available` : "Out of stock"}
+            </span>
+          </div>
+
+          {/* Quantity Selector */}
+          <div className="flex items-center border border-slate-200 rounded-lg bg-[#F5F8FC]">
+            <button
+              type="button"
+              disabled={qty <= 1}
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              className="p-2 text-slate-600 hover:text-slate-900 disabled:opacity-40"
+              aria-label="Decrease quantity"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <span className="w-8 text-center font-mono text-xs font-bold text-slate-900">
+              {qty}
+            </span>
+            <button
+              type="button"
+              disabled={qty >= displayStock}
+              onClick={() => setQty((q) => Math.min(displayStock, q + 1))}
+              className="p-2 text-slate-600 hover:text-slate-900 disabled:opacity-40"
+              aria-label="Increase quantity"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          disabled={displayStock <= 0}
+          onClick={() =>
+            onAddToCart({
+              productId: product._id,
+              name: product.name,
+              variantLabel: activeVariant ? activeVariant.label : product.volumeOrSize || "",
+              price: displayPrice,
+              stockQuantity: displayStock,
+              quantity: qty,
+              imageUrl: product.imageUrl,
+            })
+          }
+          className="w-full py-2.5 rounded-xl bg-[#283983] hover:bg-[#1d2a66] disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold transition-colors"
+        >
+          {displayStock > 0
+            ? `Add to Cart${activeVariant ? ` (${activeVariant.label})` : ""}`
+            : "Sold Out"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function StorefrontPage() {
   const [products, setProducts] = useState([]);
@@ -71,35 +238,32 @@ export default function StorefrontPage() {
       .catch(() => {});
   }, []);
 
-  function addToCart(product) {
+  function addToCart(item) {
     setCart((prev) => {
-      const existing = prev.find((i) => i.productId === product._id);
+      const existing = prev.find(
+        (i) =>
+          i.productId === item.productId && i.variantLabel === item.variantLabel
+      );
       if (existing) {
-        if (existing.quantity >= product.stockQuantity) return prev;
         return prev.map((i) =>
-          i.productId === product._id ? { ...i, quantity: i.quantity + 1 } : i
+          i.productId === item.productId && i.variantLabel === item.variantLabel
+            ? {
+                ...i,
+                quantity: Math.min(i.stockQuantity, i.quantity + item.quantity),
+              }
+            : i
         );
       }
-      return [
-        ...prev,
-        {
-          productId: product._id,
-          name: product.name,
-          price: product.price,
-          volumeOrSize: product.volumeOrSize,
-          stockQuantity: product.stockQuantity,
-          quantity: 1,
-        },
-      ];
+      return [...prev, item];
     });
     setCartOpen(true);
   }
 
-  function updateQty(productId, delta) {
+  function updateCartQty(productId, variantLabel, delta) {
     setCart((prev) =>
       prev
         .map((i) =>
-          i.productId === productId
+          i.productId === productId && i.variantLabel === variantLabel
             ? {
                 ...i,
                 quantity: Math.min(i.stockQuantity, Math.max(0, i.quantity + delta)),
@@ -127,6 +291,7 @@ export default function StorefrontPage() {
         items: cart.map((c) => ({
           productId: c.productId,
           name: c.name,
+          variantLabel: c.variantLabel,
           quantity: c.quantity,
         })),
       }),
@@ -172,7 +337,7 @@ export default function StorefrontPage() {
                 PRWC Wellness &amp; Therapy Store
               </span>
               <span className="text-[11px] text-slate-500 block">
-                Therapeutic Oils, Pain Relief &amp; Rehab Products
+                Therapeutic Oils (20 ml / 30 ml) &amp; Rehab Products
               </span>
             </div>
           </div>
@@ -201,14 +366,15 @@ export default function StorefrontPage() {
           <div className="space-y-2 max-w-xl">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold">
               <Droplets className="w-3.5 h-3.5" />
-              Clinic-Formulated Oils &amp; Recovery Essentials
+              Clinic-Formulated Oils in 20 ml &amp; 30 ml Bottles
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
               Therapeutic Pain Relief Oils &amp; Rehabilitation Gear
             </h1>
             <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed">
-              Order authentic PRWC herbal joint oils, transdermal magnesium oils,
-              orthopedic lumbar supports, and physiotherapy bands for home recovery.
+              Choose 20 ml travel size or 30 ml clinical value bottles for our
+              herbal joint oils, magnesium oils, and spine formulas, alongside
+              orthopedic supports and rehab equipment.
             </p>
           </div>
           <input
@@ -243,58 +409,13 @@ export default function StorefrontPage() {
             No products found in this category.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((p) => (
-              <div
+              <ProductCard
                 key={p._id}
-                className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col justify-between space-y-4 hover:shadow-xs transition-shadow"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge
-                      variant={
-                        p.category === "therapeutic_oil" ? "accent" : "primary"
-                      }
-                    >
-                      {p.category.replace(/_/g, " ")}
-                    </Badge>
-                    <span className="font-mono text-[11px] text-slate-400">
-                      {p.volumeOrSize || p.sku}
-                    </span>
-                  </div>
-                  <h2 className="text-base font-bold text-slate-900">
-                    {p.name}
-                  </h2>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {p.description}
-                  </p>
-                  {p.usageInstructions && (
-                    <p className="text-[11px] text-slate-500 bg-[#F5F8FC] p-2.5 rounded-lg border border-slate-100">
-                      <strong>Usage:</strong> {p.usageInstructions}
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <div>
-                    <span className="font-mono font-bold text-lg text-[#283983]">
-                      {p.currency} {p.price.toLocaleString()}
-                    </span>
-                    <span className="block text-[11px] text-slate-500">
-                      {p.stockQuantity > 0
-                        ? `${p.stockQuantity} in stock`
-                        : "Out of stock"}
-                    </span>
-                  </div>
-                  <button
-                    disabled={p.stockQuantity <= 0}
-                    onClick={() => addToCart(p)}
-                    className="px-4 py-2 rounded-lg bg-[#283983] hover:bg-[#1d2a66] disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold transition-colors"
-                  >
-                    {p.stockQuantity > 0 ? "Add to Cart" : "Sold Out"}
-                  </button>
-                </div>
-              </div>
+                product={p}
+                onAddToCart={addToCart}
+              />
             ))}
           </div>
         )}
@@ -347,7 +468,7 @@ export default function StorefrontPage() {
                   <div className="space-y-3">
                     {cart.map((item) => (
                       <div
-                        key={item.productId}
+                        key={`${item.productId}-${item.variantLabel}`}
                         className="p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-3"
                       >
                         <div>
@@ -355,13 +476,20 @@ export default function StorefrontPage() {
                             {item.name}
                           </p>
                           <p className="text-[11px] font-mono text-slate-500">
+                            {item.variantLabel ? `${item.variantLabel} • ` : ""}
                             PKR {item.price.toLocaleString()} &times;{" "}
                             {item.quantity}
                           </p>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <button
-                            onClick={() => updateQty(item.productId, -1)}
+                            onClick={() =>
+                              updateCartQty(
+                                item.productId,
+                                item.variantLabel,
+                                -1
+                              )
+                            }
                             className="p-1 rounded border border-slate-200 hover:bg-slate-100"
                           >
                             <Minus className="w-3 h-3" />
@@ -370,14 +498,20 @@ export default function StorefrontPage() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQty(item.productId, 1)}
+                            onClick={() =>
+                              updateCartQty(item.productId, item.variantLabel, 1)
+                            }
                             className="p-1 rounded border border-slate-200 hover:bg-slate-100"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() =>
-                              updateQty(item.productId, -item.quantity)
+                              updateCartQty(
+                                item.productId,
+                                item.variantLabel,
+                                -item.quantity
+                              )
                             }
                             className="p-1 rounded text-[#BA2820] hover:bg-[#FEF2F2]"
                           >

@@ -61,6 +61,7 @@ function getNavItems(role) {
       { label: "Treatment Plans", href: "/doctor/treatment-plans", icon: ClipboardList },
       { label: "Rehab Assignments", href: "/doctor/rehabilitation", icon: Dumbbell },
       { label: "Medical Records", href: "/admin/medical-records", icon: FileText },
+      { label: "Store & Oils", href: "/admin/store", icon: ShoppingBag },
       { label: "Clinical Reports", href: "/admin/reports", icon: BarChart3 },
     ];
   }
